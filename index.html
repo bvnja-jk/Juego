@@ -9,25 +9,32 @@
     <title>Gaming Tracker Premium</title>
     <style>
         :root {
-            --bg-gradient: radial-gradient(circle at 50% 50%, #1a103c 0%, #07050f 100%);
-            --card-bg: rgba(23, 20, 38, 0.65);
-            --primary: #9466ff;
-            --primary-glow: rgba(148, 102, 255, 0.5);
-            --text: #f1f1f4;
-            --text-muted: #9b9ba9;
-            --success: #00ff87;
-            --success-glow: rgba(0, 255, 135, 0.4);
+            --matrix-green: #00ff41;
+            --matrix-green-dim: #00cc33;
+            --matrix-glow: rgba(0, 255, 65, 0.5);
+            --card-bg: rgba(0, 10, 0, 0.75);
+            --primary: var(--matrix-green);
+            --primary-glow: var(--matrix-glow);
+            --text: #e0ffe0;
+            --text-muted: #6a9a6a;
+            --success: #00ff41;
+            --success-glow: rgba(0, 255, 65, 0.4);
             --warning: #ffb86c;
-            --warning-bg: rgba(255, 184, 108, 0.1);
-            --border: rgba(148, 102, 255, 0.15);
+            --warning-bg: rgba(255, 184, 108, 0.08);
+            --border: rgba(0, 255, 65, 0.15);
+            --danger: #ff3355;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @font-face {
+            font-family: 'MatrixCode';
+            src: local('Courier New'), local('monospace');
+        }
 
         body { 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            background: var(--bg-gradient);
-            background-attachment: fixed;
+            font-family: 'Courier New', 'Consolas', monospace;
+            background: #000;
             color: var(--text); 
             display: flex; 
             justify-content: center; 
@@ -35,222 +42,389 @@
             min-height: 100vh;
             margin: 0; 
             padding: 20px; 
+            overflow: hidden;
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.35;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.08) 2px,
+                rgba(0, 0, 0, 0.08) 4px
+            );
         }
 
         .container { 
             background-color: var(--card-bg); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             padding: 30px 25px; 
-            border-radius: 24px; 
+            border-radius: 8px; 
             width: 100%; 
             max-width: 420px; 
             border: 1px solid var(--border);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 0 30px rgba(0, 255, 65, 0.08),
+                0 20px 50px rgba(0, 0, 0, 0.8),
+                inset 0 0 60px rgba(0, 255, 65, 0.02);
             position: relative;
+            z-index: 2;
+            animation: containerPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes containerPulse {
+            0%, 100% { border-color: rgba(0, 255, 65, 0.15); box-shadow: 0 0 30px rgba(0, 255, 65, 0.08), 0 20px 50px rgba(0,0,0,0.8); }
+            50% { border-color: rgba(0, 255, 65, 0.3); box-shadow: 0 0 50px rgba(0, 255, 65, 0.15), 0 20px 50px rgba(0,0,0,0.8); }
         }
 
         h1 { 
             text-align: center; 
-            font-size: 1.8rem; 
+            font-size: 1.6rem; 
             margin: 0 0 6px 0; 
-            color: #fff; 
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(180deg, #fff 0%, #bbb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--matrix-green); 
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--matrix-glow), 0 0 40px rgba(0, 255, 65, 0.2);
+            position: relative;
         }
 
         .subtitle { 
             text-align: center; 
             color: var(--text-muted); 
-            font-size: 0.85rem; 
+            font-size: 0.75rem; 
             margin-bottom: 25px; 
-            font-weight: 500;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .counter { 
             text-align: center; 
-            font-size: 4rem; 
-            font-weight: 900; 
-            color: var(--primary); 
+            font-size: 3.5rem; 
+            font-weight: 400; 
+            color: var(--matrix-green); 
             margin: 10px 0 25px 0;
-            text-shadow: 0 0 20px var(--primary-glow);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            letter-spacing: -1px;
+            text-shadow: 0 0 20px var(--matrix-glow), 0 0 60px rgba(0, 255, 65, 0.15);
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+            position: relative;
+        }
+
+        .counter::before {
+            content: '> ';
+            opacity: 0.5;
         }
 
         .counter.complete { 
-            color: var(--success);
-            text-shadow: 0 0 25px var(--success-glow);
-            transform: scale(1.05);
+            color: #fff;
+            text-shadow: 0 0 30px var(--matrix-glow), 0 0 80px rgba(0, 255, 65, 0.25);
+            animation: counterCompletePulse 0.6s ease;
+        }
+
+        @keyframes counterCompletePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
 
         .recovery-box { 
             background: var(--warning-bg);
-            border: 1px solid rgba(255, 184, 108, 0.25);
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 0.88rem; 
+            border: 1px solid rgba(255, 184, 108, 0.2);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.75rem; 
             text-align: center; 
             color: var(--warning); 
             margin-bottom: 25px; 
-            font-weight: 600;
-            box-shadow: inset 0 0 12px rgba(255, 184, 108, 0.05);
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
         
         .recovery-box strong {
-            font-size: 1.05rem;
-            text-shadow: 0 0 8px rgba(255, 184, 108, 0.4);
+            font-size: 1rem;
+            color: #fff;
+            text-shadow: 0 0 8px rgba(255, 184, 108, 0.3);
         }
 
         .days-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 8px; 
-            margin-bottom: 30px; 
+            gap: 6px; 
+            margin-bottom: 25px; 
         }
 
         .day-btn { 
-            background: rgba(255, 255, 255, 0.03); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
+            background: rgba(0, 255, 65, 0.03); 
+            border: 1px solid rgba(0, 255, 65, 0.1); 
             color: var(--text-muted); 
-            padding: 16px 0; 
-            border-radius: 12px; 
+            padding: 14px 0; 
+            border-radius: 4px; 
             cursor: pointer; 
-            font-weight: 700;
-            font-size: 0.95rem;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 400;
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s ease;
             position: relative; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .day-btn:hover:not(:disabled) {
-            border-color: rgba(148, 102, 255, 0.4);
-            color: #fff;
-            background: rgba(148, 102, 255, 0.08);
+            border-color: rgba(0, 255, 65, 0.4);
+            color: var(--matrix-green);
+            background: rgba(0, 255, 65, 0.06);
+            text-shadow: 0 0 8px var(--matrix-glow);
         }
         
         .day-btn.active-normal { 
-            background: linear-gradient(135deg, #9466ff 0%, #6b3ee3 100%); 
-            border-color: #a67eff;
-            box-shadow: 0 0 15px var(--primary-glow); 
-            color: #fff; 
+            background: rgba(255, 0, 20, 0.1); 
+            border-color: #ff0040;
+            box-shadow: 0 0 15px rgba(255, 0, 20, 0.4), inset 0 0 15px rgba(255, 0, 20, 0.05); 
+            color: #ff0040; 
+            text-shadow: 0 0 10px rgba(255, 0, 20, 0.4);
         }
         
         .day-btn.active-recovered { 
-            background: linear-gradient(135deg, #ff4757 0%, #d63031 100%); 
-            border-color: #ff6b81;
-            box-shadow: 0 0 15px rgba(214, 48, 49, 0.4); 
-            color: #fff; 
+            background: rgba(255, 51, 85, 0.1); 
+            border-color: var(--danger);
+            box-shadow: 0 0 15px rgba(255, 51, 85, 0.3), inset 0 0 15px rgba(255, 51, 85, 0.05); 
+            color: var(--danger); 
+            text-shadow: 0 0 10px rgba(255, 51, 85, 0.4);
         }
 
         .day-btn.active-recovered::after { 
-            content: '🔄'; 
+            content: 'R'; 
             position: absolute; 
-            font-size: 0.6rem; 
-            bottom: 3px; 
-            right: 3px; 
+            font-size: 0.5rem; 
+            bottom: 2px; 
+            right: 4px; 
+            opacity: 0.7;
         }
-        
+
+        .day-btn.missed {
+            background: rgba(255, 0, 20, 0.08);
+            border-color: rgba(255, 0, 20, 0.3);
+            color: #ff0040;
+            text-shadow: 0 0 10px rgba(255, 0, 20, 0.3);
+            box-shadow: inset 0 0 15px rgba(255, 0, 20, 0.03);
+            animation: missedFlicker 2.5s ease-in-out infinite;
+        }
+
+        .day-btn.missed::after {
+            content: '✗';
+            position: absolute;
+            font-size: 0.7rem;
+            bottom: 2px;
+            right: 5px;
+            opacity: 0.8;
+            text-shadow: 0 0 6px rgba(255, 0, 20, 0.6);
+        }
+
+        @keyframes missedFlicker {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
         .day-btn:disabled { 
-            opacity: 0.15; 
+            opacity: 0.08; 
             cursor: not-allowed; 
             border-color: transparent;
-            background: rgba(0, 0, 0, 0.2);
         }
 
         .day-btn.active-normal:disabled, 
         .day-btn.active-recovered:disabled { 
-            opacity: 0.55; 
+            opacity: 0.3; 
             box-shadow: none; 
         }
 
+        .day-btn.missed:disabled {
+            opacity: 1 !important;
+            cursor: not-allowed;
+        }
+
         .history-section { 
-            border-top: 1px solid rgba(255, 255, 255, 0.08); 
-            padding-top: 20px; 
+            border-top: 1px solid rgba(0, 255, 65, 0.1); 
+            padding-top: 18px; 
         }
 
         .history-title { 
-            font-size: 0.78rem; 
+            font-size: 0.65rem; 
             color: var(--text-muted); 
             margin-bottom: 12px; 
-            font-weight: 700; 
+            font-weight: 400; 
             text-transform: uppercase; 
-            letter-spacing: 1px; 
+            letter-spacing: 3px; 
         }
 
         .history-list { 
-            max-height: 200px; 
+            max-height: 180px; 
             overflow-y: auto; 
             display: flex; 
             flex-direction: column; 
-            gap: 10px; 
+            gap: 8px; 
             padding-right: 2px;
         }
 
-        /* Personalización barra de scroll del historial */
-        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar { width: 3px; }
         .history-list::-webkit-scrollbar-track { background: transparent; }
-        .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .history-list::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.15); border-radius: 0; }
 
         .history-item { 
             display: flex; 
             flex-direction: column; 
-            background: rgba(0, 0, 0, 0.2); 
-            padding: 12px 14px; 
-            border-radius: 14px; 
-            font-size: 0.82rem; 
-            border-left: 4px solid rgba(255,255,255,0.1);
-            transition: transform 0.2s;
+            background: rgba(0, 0, 0, 0.3); 
+            padding: 10px 12px; 
+            border-radius: 4px; 
+            font-size: 0.72rem; 
+            border-left: 3px solid rgba(0, 255, 65, 0.1);
+            transition: all 0.2s;
         }
 
         .history-item:hover {
-            transform: translateX(2px);
+            border-left-color: var(--matrix-green);
+            background: rgba(0, 255, 65, 0.03);
         }
 
-        .history-item.completed-week { border-left-color: var(--success); background: rgba(0, 255, 135, 0.03); }
-        .history-item.incomplete-week { border-left-color: #ff4757; background: rgba(255, 71, 87, 0.02); }
+        .history-item.completed-week { border-left-color: var(--matrix-green); background: rgba(0, 255, 65, 0.03); }
+        .history-item.incomplete-week { border-left-color: var(--danger); background: rgba(255, 51, 85, 0.02); }
         
         .history-header { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 6px; 
+            margin-bottom: 4px; 
         }
 
-        .history-date { color: #fff; font-weight: 600; font-size: 0.85rem; }
-        .history-details { display: flex; flex-direction: column; gap: 3px; font-size: 0.75rem; color: var(--text-muted); }
-        .days-list-span { color: rgba(255, 255, 255, 0.85); font-weight: 500; }
+        .history-date { color: var(--matrix-green); font-weight: 400; font-size: 0.75rem; letter-spacing: 1px; }
+        .history-details { display: flex; flex-direction: column; gap: 2px; font-size: 0.65rem; color: var(--text-muted); }
+        .days-list-span { color: rgba(224, 255, 224, 0.8); font-weight: 400; }
         
-        .status.ok { color: var(--success); font-weight: 700; text-shadow: 0 0 10px rgba(0, 255, 135, 0.2); }
-        .status.fail { color: #ff4757; font-weight: 700; }
+        .status.ok { color: var(--matrix-green); font-weight: 400; text-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
+        .status.fail { color: var(--danger); font-weight: 400; }
 
         .loading-overlay { 
             position: absolute; 
-            top:0; left:0; width:100%; height:100%; 
-            background: #07050f; 
-            border-radius:24px; 
-            display:flex; 
-            justify-content:center; 
-            align-items:center; 
-            font-weight:700; 
-            color: var(--primary); 
-            z-index:10; 
-            font-size: 1.05rem;
-            letter-spacing: 0.5px;
-            transition: all 0.4s ease; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            gap: 12px;
+            font-weight: 400; 
+            color: var(--matrix-green); 
+            z-index: 10; 
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: all 0.5s ease; 
+            text-shadow: 0 0 10px var(--matrix-glow);
         }
         .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        .loading-text {
+            animation: loadingBlink 1s step-end infinite;
+        }
+
+        .loading-dots {
+            min-width: 24px;
+        }
+
+        @keyframes loadingBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Glitch effect */
+        .glitch {
+            animation: glitch 0.3s ease;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -1px); }
+            60% { transform: translate(-1px, 1px); }
+            80% { transform: translate(1px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes glitchColor {
+            0% { transform: translate(0); opacity: 1; }
+            10% { transform: translate(-3px, 2px); opacity: 0.7; color: #fff; border-color: #fff; }
+            20% { transform: translate(3px, -1px); opacity: 1; color: #ff0040; }
+            30% { transform: translate(-1px, 3px); opacity: 0.5; color: #0f0; border-color: #0f0; }
+            40% { transform: translate(2px, -2px); opacity: 1; color: #ff0040; }
+            50% { transform: translate(-2px, 1px); opacity: 0.8; color: #fff; }
+            60% { transform: translate(1px, -3px); opacity: 1; color: #ff0040; }
+            80% { transform: translate(-1px, 1px); opacity: 1; }
+            100% { transform: translate(0); opacity: 1; }
+        }
+
+        /* Entry animation */
+        .container {
+            animation: fadeInUp 0.6s ease-out, containerPulse 4s ease-in-out infinite 0.6s;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            border: 1px solid var(--matrix-green);
+            color: var(--matrix-green);
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            z-index: 100;
+            text-shadow: 0 0 10px var(--matrix-glow);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+            transition: all 0.4s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .notification.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div id="loading" class="loading-overlay">Sincronizando la nube...</div>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="scanlines"></div>
 
-        <h1>Tracker de Juego</h1>
-        <div class="subtitle">Meta semanal base: 3 días</div>
+    <div class="container">
+        <div id="loading" class="loading-overlay"><span class="loading-text">INICIANDO SISTEMA</span><span class="loading-dots" id="loading-dots"></span></div>
+
+        <h1>DIAS JUEGO</h1>
         
         <div class="counter" id="counter">0 / 3</div>
         
@@ -261,28 +435,19 @@
         <div class="days-grid" id="days-grid"></div>
         
         <div class="history-section">
-            <div class="history-title">Registro Histórico</div>
+            <div class="history-title">Registro</div>
             <div id="history-list" class="history-list"></div>
         </div>
+
+        <div id="notif" class="notification hidden"></div>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyDMbp1mYL22ElQwCT5pvZZVyT14vTH29tU",
-          authDomain: "tracker-juego.firebaseapp.com",
-          projectId: "tracker-juego",
-          storageBucket: "tracker-juego.firebasestorage.app",
-          messagingSenderId: "1012741365382",
-          appId: "1:1012741365382:web:74f7c87bc5fb7e285e3b07",
-          measurementId: "G-SMFW0E8J0D"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const docRef = doc(db, "gamingTracker", "sharedState");
+        const supabaseUrl = "https://smhqpzxljznydichuasi.supabase.co";
+        const supabaseKey = "sb_publishable_E2wN5BcyBPKEXOLotJ08nw_DazFry7_";
+        const supabase = createClient(supabaseUrl, supabaseKey);
 
         let data = {
             lastUsedWeek: getWeekNumber(new Date()),
@@ -290,6 +455,9 @@
             pendingRecovery: 0,
             history: []
         };
+
+        let isOwnUpdate = false;
+        let supabaseReady = false;
 
         const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -310,20 +478,88 @@
             return `${f(monday)} al ${f(sunday)}`;
         }
 
-        onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-                data = docSnap.data();
-                const currentWeekNum = getWeekNumber(new Date());
-                if (data.lastUsedWeek !== currentWeekNum) {
-                    executeResetLogic(new Date());
-                    return;
+        async function loadFromSupabase() {
+            try {
+                const { data: result, error } = await supabase
+                    .from('gaming_tracker')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
+
+                if (result && !error) {
+                    data = {
+                        lastUsedWeek: result.last_used_week,
+                        weekDaysState: result.week_days_state,
+                        pendingRecovery: result.pending_recovery,
+                        history: result.history || []
+                    };
+                    supabaseReady = true;
+                    const currentWeekNum = getWeekNumber(new Date());
+                    if (data.lastUsedWeek !== currentWeekNum) {
+                        executeResetLogic(new Date());
+                        return;
+                    }
+                } else {
+                    await saveToSupabase();
+                    supabaseReady = true;
                 }
-            } else {
-                saveToCloud();
+            } catch (e) {
+                console.warn('Supabase no disponible, modo local');
             }
             document.getElementById('loading').classList.add('hidden');
             updateUI();
-        });
+        }
+
+        async function pollFromSupabase() {
+            if (!supabaseReady) return;
+            try {
+                const { data: result } = await supabase
+                    .from('gaming_tracker')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
+                if (result) {
+                    let stored = JSON.stringify(data.weekDaysState);
+                    let incoming = JSON.stringify(result.week_days_state);
+                    if (stored !== incoming
+                        || JSON.stringify(data.history) !== JSON.stringify(result.history || [])
+                        || data.pendingRecovery !== result.pending_recovery) {
+                        data = {
+                            lastUsedWeek: result.last_used_week,
+                            weekDaysState: result.week_days_state,
+                            pendingRecovery: result.pending_recovery,
+                            history: result.history || []
+                        };
+                        updateUI();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        try {
+            const channel = supabase.channel('gaming-tracker')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'gaming_tracker', filter: 'id=eq.1' },
+                    (payload) => {
+                        if (isOwnUpdate) {
+                            isOwnUpdate = false;
+                            return;
+                        }
+                        if (payload.new && payload.new.id === 1) {
+                            data = {
+                                lastUsedWeek: payload.new.last_used_week,
+                                weekDaysState: payload.new.week_days_state,
+                                pendingRecovery: payload.new.pending_recovery,
+                                history: payload.new.history || []
+                            };
+                            updateUI();
+                        }
+                    })
+                .subscribe();
+        } catch (e) {}
+
+        loadFromSupabase();
+        setInterval(pollFromSupabase, 5000);
 
         function executeResetLogic(referenceDate) {
             let normalCount = data.weekDaysState.filter(v => v === 'normal').length;
@@ -357,7 +593,7 @@
 
             data.weekDaysState = [null, null, null, null, null, null, null];
             data.lastUsedWeek = getWeekNumber(referenceDate);
-            saveToCloud();
+            saveToSupabase();
         }
 
         window.handleDayClick = function(index) {
@@ -378,7 +614,8 @@
                 data.pendingRecovery++;
             }
             
-            saveToCloud();
+            updateUI();
+            saveToSupabase();
         }
 
         function updateUI() {
@@ -404,14 +641,21 @@
             ['L', 'M', 'Mi', 'J', 'V', 'S', 'D'].forEach((d, i) => {
                 const btn = document.createElement('button');
                 let state = data.weekDaysState[i];
+                let isPast = i < todayIndex;
                 
                 btn.textContent = d;
                 btn.className = 'day-btn';
                 
-                if (state === 'normal') btn.classList.add('active-normal');
-                if (state === 'recovered') btn.classList.add('active-recovered');
+                if (isPast && state !== null) {
+                    btn.classList.add('missed');
+                    if (state === 'normal') btn.classList.add('used-past');
+                } else if (state === 'normal') {
+                    btn.classList.add('active-normal');
+                } else if (state === 'recovered') {
+                    btn.classList.add('active-recovered');
+                }
                 
-                if (i < todayIndex) btn.disabled = true;
+                if (isPast) btn.disabled = true;
                 if (state === null && normalCount >= 3 && data.pendingRecovery <= 0) btn.disabled = true;
 
                 btn.onclick = () => handleDayClick(i);
@@ -445,9 +689,146 @@
             }
         }
 
-        async function saveToCloud() {
-            await setDoc(docRef, data);
+        async function saveToSupabase() {
+            if (!supabaseReady) return;
+            isOwnUpdate = true;
+            setTimeout(() => { isOwnUpdate = false; }, 3000);
+            try {
+                await supabase
+                    .from('gaming_tracker')
+                    .upsert({
+                        id: 1,
+                        last_used_week: data.lastUsedWeek,
+                        week_days_state: data.weekDaysState,
+                        pending_recovery: data.pendingRecovery,
+                        history: data.history
+                    });
+            } catch (e) {}
         }
+
+        function showNotification(msg) {
+            const el = document.getElementById('notif');
+            if (!el) return;
+            el.textContent = '> ' + msg;
+            el.classList.remove('hidden');
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+    </script>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('matrix-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<>/{}[]|&^%$#@!';
+            const fontSize = 14;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = [];
+            const speeds = [];
+
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.floor(Math.random() * -canvas.height / fontSize);
+                speeds[i] = 0.3 + Math.random() * 0.7;
+            }
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = fontSize + 'px monospace';
+
+                for (let i = 0; i < columns; i++) {
+                    const char = chars[Math.floor(Math.random() * chars.length)];
+                    const x = i * fontSize;
+                    const y = drops[i] * fontSize;
+                    const b = Math.random();
+                    if (b > 0.98) { ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 15; ctx.shadowColor = '#00ff41'; }
+                    else if (b > 0.9) { ctx.fillStyle = '#00ff41'; ctx.shadowBlur = 8; ctx.shadowColor = '#00ff41'; }
+                    else { ctx.fillStyle = '#006600'; ctx.shadowBlur = 0; }
+                    ctx.fillText(char, x, y);
+                    ctx.shadowBlur = 0;
+                    if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i] += speeds[i];
+                }
+            }
+            setInterval(draw, 50);
+
+            const title = document.querySelector('h1');
+            const counter = document.getElementById('counter');
+            const originalTitle = title ? title.textContent : '';
+            const glitchChars = '!@#$%&*+=-?<>';
+            let isGlitching = false;
+
+            function triggerGlitch(el, original, duration = 150) {
+                if (isGlitching) return;
+                isGlitching = true;
+                el.classList.add('glitch');
+                let iterations = 0;
+                const maxIter = 5;
+                const interval = setInterval(() => {
+                    let glitched = '';
+                    for (let i = 0; i < original.length; i++) {
+                        if (Math.random() < 0.4) glitched += glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                        else glitched += original[i];
+                    }
+                    el.textContent = glitched;
+                    iterations++;
+                    if (iterations >= maxIter) {
+                        clearInterval(interval);
+                        el.textContent = original;
+                        setTimeout(() => { el.classList.remove('glitch'); isGlitching = false; }, 80);
+                    }
+                }, duration / maxIter);
+            }
+
+            if (title) setInterval(() => triggerGlitch(title, originalTitle, 120), 3500);
+
+            if (counter) {
+                let lastCounterText = counter.textContent;
+                setInterval(() => {
+                    if (counter.textContent !== lastCounterText) {
+                        lastCounterText = counter.textContent;
+                        triggerGlitch(counter, counter.textContent, 100);
+                    }
+                }, 100);
+            }
+
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('day-btn')) {
+                    const grid = document.getElementById('days-grid');
+                    if (grid) {
+                        grid.style.animation = 'glitch 0.15s ease';
+                        setTimeout(() => grid.style.animation = '', 200);
+                    }
+                }
+            });
+
+            // Periodic glitch on used day buttons
+            setInterval(() => {
+                const usedBtns = document.querySelectorAll('.day-btn.used-past');
+                if (usedBtns.length === 0) return;
+                const btn = usedBtns[Math.floor(Math.random() * usedBtns.length)];
+                btn.style.animation = 'glitchColor 0.4s ease';
+                setTimeout(() => btn.style.animation = '', 500);
+            }, 2500);
+
+            const dotsEl = document.getElementById('loading-dots');
+            if (dotsEl) {
+                let dotCount = 0;
+                setInterval(() => {
+                    dotCount = (dotCount + 1) % 4;
+                    dotsEl.textContent = '.'.repeat(dotCount);
+                }, 400);
+            }
+        })();
     </script>
 </body>
 </html>
